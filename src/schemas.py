@@ -1,4 +1,4 @@
-from marshmallow import Schema, fields, validate
+from marshmallow import Schema, fields, validate, EXCLUDE, pre_load
 
 
 # Define schemas
@@ -27,14 +27,19 @@ class TweetCreate(Schema):
     name = fields.Str(example="Emmanuel Macron")
     profileUser = fields.Url(example="https://twitter.com/EmmanuelMacron")
     query = fields.Url(example="https://twitter.com/EmmanuelMacron")
-    # sentiment = fields.Str(validate=validate.OneOf(["undefined", "positive", "negative", "neutral"]))
-    # tags = fields.List(fields.Nested(Tag), description="A list of tags to describe the tweet")
+    sentiment = fields.Str(default="undefined", validate=validate.OneOf(["undefined", "positive", "negative", "neutral"]))
     text = fields.String(required=True, validate=validate.Length(max=280), example="L'école permet de lutter contre les inégalités sociales et de destin. C'est pourquoi nos enfants doivent pouvoir continuer à s'y rendre et à apprendre, avec un protocole strict. Bonne rentrée à tous ! Et continuons à appliquer les gestes barrières (souvenons-nous de la chanson).")
     timestamp = fields.DateTime(example="2021-04-26T10:12:58.694Z")
     tweetDate = fields.DateTime(format="%a %b %d %H:%M:%S %z %Y", example="Sat Apr 24 14:01:25 +0000 2021")
     tweetLink = fields.Url(example="https://twitter.com/EmmanuelMacron/status/1385257895240024070")
-    twitterId = fields.Str()
+    twitterId = fields.Int(example=1976143068)
     type = fields.Str(example="tweet")
+
+    @pre_load
+    def add_default_sentiment(self, data, **kwargs):
+        if 'sentiment' not in data.keys():
+            data["sentiment"] = "undefined"
+        return data
 
 
 class TweetCreateList(Schema):
@@ -42,17 +47,27 @@ class TweetCreateList(Schema):
 
 
 class TweetId(Schema):
-    id = fields.Number(description="Tweet Id", required=True, example=2938)
+    id = fields.Number(description="Tweet Id", required=True, example=29)
 
 
 class TweetResponse(Schema):
     id = fields.Int(format="int64", required=True)
+    name = fields.Str(example="Emmanuel Macron")
+    query = fields.Url(example="https://twitter.com/EmmanuelMacron")
     text = fields.String(required=True, validate=validate.Length(max=280),
                          example="L'école permet de lutter contre les inégalités sociales et de destin. C'est pourquoi nos enfants doivent pouvoir continuer à s'y rendre et à apprendre, avec un protocole strict. Bonne rentrée à tous ! Et continuons à appliquer les gestes barrières (souvenons-nous de la chanson).")
-    tags = fields.List(fields.Nested(Tag), description="A list of tags to describe the tweet")
     tweetDate = fields.DateTime(example="Mon Apr 26 05:44:19 +0000 2021")
-    mediaUrl = fields.List(fields.Url(example="https://pbs.twimg.com/media/Ezvm0HeWQAA0KuW.jpg"))
-    sentiment = fields.Str(validate=validate.OneOf(["undefined", "positive", "negative", "neutral"]))
+    sentiment = fields.Str(missing="undefined", validate=validate.OneOf(["undefined", "positive", "negative", "neutral"]))
+
+    @pre_load
+    def default_sentiment(self, data, **kwargs):
+        if data["sentiment"] is None:
+            data["sentiment"] = "undefined"
+        return data
+
+
+class TweetResponseList(Schema):
+    tweets = fields.List(fields.Nested(TweetResponse(unknown=EXCLUDE)))
 
 
 class SearchResponse(Schema):
@@ -61,3 +76,8 @@ class SearchResponse(Schema):
 
 class SearchInput(Schema):
     tags = fields.List(fields.String(validate=validate.Length(max=100), required=True))
+
+
+class UpdateInput(Schema):
+    id = fields.Int(format="int64", required=True)
+    sentiment = fields.Str(required=True, validate=validate.OneOf(["undefined", "positive", "negative", "neutral"]))

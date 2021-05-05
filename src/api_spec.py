@@ -5,7 +5,7 @@ from apispec import APISpec
 from apispec.ext.marshmallow import MarshmallowPlugin
 from apispec_webframeworks.flask import FlaskPlugin
 from src.schemas import ApiResponse, SearchResponse, TweetCreate, \
-    TweetResponse, TweetId
+    TweetResponse, TweetId, UpdateInput, TweetResponseList
 
 
 # Create an APISpec
@@ -23,6 +23,8 @@ spec.components.schema("TweetCreate", schema=TweetCreate)
 spec.components.schema("TweetResponse", schema=TweetResponse)
 spec.components.schema("SearchResponse", schema=SearchResponse)
 spec.components.schema("TweetId", schema=TweetId)
+spec.components.schema("UpdateInput", schema=UpdateInput)
+spec.components.schema("TweetResponseList", schema=TweetResponseList)
 
 # add swagger tags that are used for endpoint annotation
 tags = [

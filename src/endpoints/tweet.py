@@ -1,17 +1,12 @@
 from flask import Blueprint, jsonify, request
-from marshmallow import ValidationError
+from marshmallow import ValidationError, EXCLUDE, pre_load
 
-# import connexion
-import six
+from src.schemas import TweetCreateList, TweetId, \
+    SearchInput, ApiResponse, UpdateInput, TweetResponseList, TweetResponse
+from src.sqlite.db import insert_tweets, get_tweet_from_id, \
+    delete_tweet_from_id, add_sentiment_to_tweet_from_id
 
-from src.models.api_response import ApiResponse  # noqa: E501
-from src.models.search_response import SearchResponse  # noqa: E501
-from src.models.tweet_create import TweetCreate  # noqa: E501
-from src.models.tweet_response import TweetResponse  # noqa: E501
-
-from src.schemas import TweetCreateList, TweetId, SearchInput, ApiResponse
-from src.sqlite.queries import create_connection, insert_tweets, get_tweet_from_id, \
-    delete_tweet_from_id, update_tweet_from_id
+# CONTROLLER
 
 tweet = Blueprint(name="tweet", import_name=__name__)
 
@@ -33,33 +28,43 @@ def post_tweet(body=None):  # noqa: E501
           description: Compute sentiment for a tweet
           content:
             application/json:
-              schema: TweetResponse
-        '404':
-          description: Invalid tweet id
+              schema: TweetResponseList
+        '400':
+          description: Cannot insert the new tweets
           content:
             application/json:
-              schema: TweetResponse
+              schema: ApiResponse
       tags:
           - tweet
     """
     data = request.get_json()
     schema = TweetCreateList()
-    response_schema = ApiResponse()
+    error_response_schema = ApiResponse()
+    response_schema = TweetResponseList()
+    response = None
+    code = None
 
     try:
         tweets = schema.load(data)
-        print(data, flush=True)
-        # print(tweets["tweets"], flush=True)
-        create_connection(insert_tweets, tweets["tweets"])
-        return tweets
-        # TODO return the inserted posts
+        results = insert_tweets(tweets["tweets"])
+        response = {"tweets": results}
+        response = response_schema.load(response)
     except ValidationError as e:
-        response = response_schema.load({
-            "code": 400,
+        code = 400
+        response = error_response_schema.load({
+            "code": code,
             "type": "Validation error",
-            "message": str(e)
+            "msg": str(e)
         })
-        return response
+    except ValueError as e:
+        code = 400
+        response = error_response_schema.load({
+            "code": code,
+            "type": "Value Error",
+            "msg": str(e)
+        })
+
+    return response, code
 
 
 @tweet.route('/<id>', methods=['GET'])
@@ -71,8 +76,7 @@ def get_tweet(id):  # noqa: E501
       parameters:
       - name: id
         in: path
-        type: string
-        required: true
+        schema: TweetId
         description: Tweet Id
 
       responses:
@@ -96,40 +100,45 @@ def get_tweet(id):  # noqa: E501
           - tweet
     """
     schema = TweetId()
-    response_schema = ApiResponse()
+    error_response_schema = ApiResponse()
+    response_schema = TweetResponse(unknown=EXCLUDE)
+    response = None
+    code = None
 
     try:
         schema.load({'id': id})
-        response = create_connection(get_tweet_from_id, id) # utiliser un décorateur
-        return str(response)
+        response_db = get_tweet_from_id(id)
+        response = response_schema.load(response_db)
+        code = 200
     except ValidationError as e:
-        response = response_schema.load({
-            "code": 400,
+        code = 400
+        response = error_response_schema.load({
+            "code": code,
             "type": "Validation error",
-            "message": str(e)
+            "msg": str(e)
         })
-        return response
     except ValueError as e:
-        response = response_schema.load({
-            "code": 404,
+        code = 404
+        response = error_response_schema.load({
+            "code": code,
             "type": "Not found",
-            "message": str(e)
+            "msg": str(e)
         })
-        return response
+
+    return response, code
 
 
-@tweet.route('/<id>', methods=['PUT'])
-def update_tweet(id):  # noqa: E501
+@tweet.route('/sentiment', methods=['PUT'])
+def update_tweet():  # noqa: E501
     """
     ---
     put:
       description: Update a tweet sentiment
       parameters:
-      - name: id
-        in: path
-        type: string
-        required: true
-        description: Tweet Id
+      - name: sentiment
+        in: query
+        description: Sentiment of the tweet
+        schema: UpdateInput
 
       responses:
         '200':
@@ -158,27 +167,33 @@ def update_tweet(id):  # noqa: E501
       tags:
           - tweet
     """
-    schema = TweetId()
-    response_schema = ApiResponse()
+    schema = UpdateInput()
+    error_response_schema = ApiResponse()
+    response_schema = TweetResponse(unknown=EXCLUDE)
+    response = None
+    code = None
 
     try:
-        schema.load({'id': id})
-        response = create_connection(update_tweet_from_id, id)  # utiliser un décorateur
-        return str(response)
+        input = schema.load({'id': request.args.get('id'),
+                             'sentiment': request.args.get('sentiment')})
+        response = add_sentiment_to_tweet_from_id(input)
+        response = response_schema.load(response)
+        code = 200
     except ValidationError as e:
-        response = response_schema.load({
-            "code": 400,
+        code = 400
+        response = error_response_schema.load({
+            "code": code,
             "type": "Validation error",
-            "message": str(e)
+            "msg": str(e)
         })
-        return response
     except ValueError as e:
-        response = response_schema.load({
-            "code": 404,
+        code = 404
+        response = error_response_schema.load({
+            "code": code,
             "type": "Not found",
-            "message": str(e)
+            "msg": str(e)
         })
-        return response
+    return response, code
 
 
 @tweet.route('/<id>', methods=['DELETE'])
@@ -217,25 +232,33 @@ def delete_tweet(id):  # noqa: E501
 
     schema = TweetId()
     response_schema = ApiResponse()
+    response = None
+    code = None
 
     try:
         schema.load({'id': id})
-        response = create_connection(delete_tweet_from_id, id)  # utiliser un décorateur
-        return str(response)
-    except ValidationError as e:
+        code = 200
         response = response_schema.load({
-            "code": 400,
+            "code": code,
+            "type": "Tweet deletion",
+            "msg": str(delete_tweet_from_id(id))
+        })
+    except ValidationError as e:
+        code = 400
+        response = response_schema.load({
+            "code": code,
             "type": "Validation error",
-            "message": str(e)
+            "msg": str(e)
         })
         return response
     except ValueError as e:
+        code = 404
         response = response_schema.load({
-            "code": 404,
+            "code": code,
             "type": "Not found",
-            "message": str(e)
+            "msg": str(e)
         })
-        return response
+    return response, code
 
 
 @tweet.route('/search', methods=['GET'])
