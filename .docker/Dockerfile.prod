@@ -1,0 +1,14 @@
+#FROM python:3.7
+FROM python:3.7
+
+COPY . /app
+WORKDIR /app
+
+ARG FLASK_ENV
+ENV FLASK_ENV ${FLASK_ENV}
+ARG FLASK_PORT
+ENV FLASK_PORT ${FLASK_PORT}
+
+RUN pip install -r requirements.txt
+EXPOSE ${FLASK_PORT}
+CMD sh run_app_prod.sh

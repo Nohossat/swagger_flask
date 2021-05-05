@@ -1,0 +1,22 @@
+version: "3.7"
+
+services:
+  flask-api:
+    build:
+      context: .
+      dockerfile: ${DOCKERFILE}
+      args:
+        - FLASK_ENV=${FLASK_ENV}
+        - FLASK_PORT=${FLASK_PORT}
+    restart: unless-stopped
+    container_name: flask-api
+    image: hrlab/flask-api:0.0.0
+    ports:
+      - 0.0.0.0:${FLASK_PORT}:${FLASK_PORT}
+    expose:
+      - ${FLASK_PORT}
+    networks:
+      - app-net
+
+networks:
+  app-net:
