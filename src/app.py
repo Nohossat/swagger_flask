@@ -7,8 +7,15 @@ from flask import Flask, jsonify
 from src.endpoints.tweet import tweet
 from src.endpoints.swagger import swagger_ui_blueprint, SWAGGER_URL
 
+from src.sqlite import db
+import os
+
 # init Flask app
 app = Flask(__name__)
+app.config['DATABASE'] = os.path.join(os.path.dirname(__file__), "sqlite", "tweets.db")
+
+# init database
+db.init_app(app)
 
 # register blueprints. ensure that all paths are versioned!
 app.register_blueprint(tweet, url_prefix="/api/v1/tweet")
