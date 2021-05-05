@@ -1,4 +1,4 @@
-PRAGMA foreign_keys = ON;
+PRAGMA foreign_keys=ON;
 
 DROP TABLE IF EXISTS tweets;
 DROP TABLE IF EXISTS tweets_sentiments;
@@ -21,15 +21,15 @@ CREATE TABLE tweets (
 
 CREATE TABLE tweets_sentiments (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  tweet_id VARCHAR(20) UNIQUE,
+  tweet_id INTEGER UNIQUE NOT NULL,
   sentiment VARCHAR(10),
-  FOREIGN KEY (tweet_id) REFERENCES tweets (id)
+  FOREIGN KEY (tweet_id) REFERENCES tweets(id)
 );
 
 
 CREATE TABLE tweets_tags (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  tweet_id VARCHAR(20),
+  tweet_id INTEGER UNIQUE NOT NULL,
   tags VARCHAR(300),
-  FOREIGN KEY (tweet_id) REFERENCES tweets (id)
+  FOREIGN KEY (tweet_id) REFERENCES tweets(id)
 );
