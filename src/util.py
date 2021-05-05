@@ -1,19 +1,20 @@
 import joblib
 import os
 
-from sklearn.svm import SVC
+import nohossat_cas_pratique
+
+
 
 
 def compute_sentiment(tweets):
     default_model_path = os.path.join(os.path.dirname(__file__), "models", "grid_search_SVC.joblib")
     model = joblib.load(default_model_path)
 
-    # infer
     preds = model.predict(tweets)
     predictions = []
 
     for pred in preds:
-        prediction = "Positive" if pred else "Negative"
+        prediction = "positive" if pred else "negative"
         predictions.append(prediction)
 
     if len(predictions) == 1:
@@ -23,4 +24,4 @@ def compute_sentiment(tweets):
 
 
 if __name__ == "__main__":
-    print(compute_sentiment("Je déteste"))
+    print(compute_sentiment(["Je déteste", "J'adore"]))

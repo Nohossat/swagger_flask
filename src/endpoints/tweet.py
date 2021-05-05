@@ -4,7 +4,7 @@ from marshmallow import ValidationError, EXCLUDE, pre_load
 from src.schemas import TweetCreateList, TweetId, \
     SearchInput, ApiResponse, UpdateInput, TweetResponseList, TweetResponse
 from src.sqlite.db import insert_tweets, get_tweet_from_id, \
-    delete_tweet_from_id, add_sentiment_to_tweet_from_id
+    delete_tweet_from_id, get_sentiment_to_tweet_from_id
 
 # CONTROLLER
 
@@ -128,21 +128,21 @@ def get_tweet(id):  # noqa: E501
     return response, code
 
 
-@tweet.route('/sentiment', methods=['PUT'])
-def update_tweet():  # noqa: E501
+@tweet.route('/<id>', methods=['PUT'])
+def update_tweet(id):  # noqa: E501
     """
     ---
     put:
       description: Update a tweet sentiment
       parameters:
-      - name: sentiment
-        in: query
-        description: Sentiment of the tweet
-        schema: UpdateInput
+      - name: id
+        in: path
+        description: Tweet Id
+        schema: TweetId
 
       responses:
         '200':
-          description: Get complte Tweet
+          description: Get complete Tweet
           content:
             application/json:
               schema: TweetResponse
@@ -167,16 +167,15 @@ def update_tweet():  # noqa: E501
       tags:
           - tweet
     """
-    schema = UpdateInput()
+    schema = TweetId()
     error_response_schema = ApiResponse()
     response_schema = TweetResponse(unknown=EXCLUDE)
     response = None
     code = None
 
     try:
-        input = schema.load({'id': request.args.get('id'),
-                             'sentiment': request.args.get('sentiment')})
-        response = add_sentiment_to_tweet_from_id(input)
+        input = schema.load({'id': id})
+        response = get_sentiment_to_tweet_from_id(id)
         response = response_schema.load(response)
         code = 200
     except ValidationError as e:

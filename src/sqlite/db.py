@@ -3,8 +3,7 @@ import sqlite3
 import click
 from flask import current_app, g
 from flask.cli import with_appcontext
-
-# TODO foreign keys not working
+from src.util import compute_sentiment
 
 # CREATE DB OBJECT
 def get_db():
@@ -14,6 +13,7 @@ def get_db():
             detect_types=sqlite3.PARSE_DECLTYPES
         )
         g.db.row_factory = sqlite3.Row
+        g.db.execute("PRAGMA foreign_keys=ON;")
 
     return g.db
 
@@ -118,17 +118,26 @@ def delete_tweet_from_id(id):
         return "Tweet deleted"
 
 
-def add_sentiment_to_tweet_from_id(update):
+def get_sentiment_to_tweet_from_id(id):
     db = get_db()
 
-    db.execute("insert into tweets_sentiments (tweet_id, sentiment) values (?, ?)", (update["id"], update["sentiment"]))
-    res = db.execute("SELECT *, tweets_sentiments.sentiment FROM tweets LEFT JOIN tweets_sentiments ON tweets_sentiments.tweet_id = tweets.rowid WHERE tweets.rowid = '%s';" % update["id"]).fetchone()
-    db.commit()
+    # get tweet
+    tweet = get_tweet_from_id(id)
 
-    if res is None:
-        raise ValueError("Tweet not found")
-    else:
-        return dict(res)
+    prediction = compute_sentiment([tweet["text"]])
+
+    try:
+        db.execute(f"UPDATE tweets_sentiments SET sentiment = '%s' WHERE tweet_id = '%s'" % (prediction, id))
+        res = db.execute("SELECT *, tweets_sentiments.sentiment FROM tweets LEFT JOIN tweets_sentiments ON tweets_sentiments.tweet_id = tweets.rowid WHERE tweets.rowid = '%s';" % id).fetchone()
+        db.commit()
+
+        if res is None:
+            raise ValueError("Tweet not found")
+        else:
+            print(dict(res), flush=True)
+            return dict(res)
+    except sqlite3.IntegrityError:
+        raise ValueError("This tweet doesn't exist")
 
 
 def search_tweet(tags):
@@ -171,10 +180,5 @@ if __name__ == "__main__":
 
     ]
 
-    update = {
-        "id" : 2,
-        "sentiment" : "neutral"
-    }
-    print(add_sentiment_to_tweet_from_id(update))
-
+    print(get_sentiment_to_tweet_from_id(1))
 
