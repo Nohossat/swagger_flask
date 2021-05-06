@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="./css/main.css">
+    <title>Tweet Sentiment analysis</title>
+</head>
+<body>
+<h1>Tweet Sentiment analysis</h1>
+<div class="btn-choice">
+    <div class="panel-btn lookup-btn active">Lookup</div>
+    <div class="panel-btn search-btn">Results</div>
+</div>
+<div>
+    <div class="lookup panel active" id="lookup-panel">
+        <div class="search">
+            <h3>Search</h3>
+            <form action="">
+                <div class="form_input">
+                    <input type="text" name="search" id="search" placeholder="Look for tweets about our favorite politicians">
+                </div>
+                <button type="submit" class="look-btn ml">Look</button>
+            </form>
+        </div>
+
+        <div class="swagger_actions">
+            <div class="post">
+                <h3>Save new tweets in the database</h3>
+                <form>
+                    <div class="form_input">
+                        <textarea name="post_json" class="post_json" cols="30" rows="20" placeholder="Put JSON data"></textarea>
+                    </div>
+
+                    <button id="post-btn" class="post-btn">Post</button>
+                </form>
+                <div class="overflow hidden">
+                    <pre class="post-result" id="post-results"></pre>
+                </div>
+
+
+            </div>
+            <div class="secondary-actions">
+                <div class="get">
+                    <h3>Fetch a tweet with its ID</h3>
+                    <form class="flex-display">
+                        <div class="form_input">
+                            <input type="text" name="tweet_id" class="tweet-id" value="">
+                        </div>
+                        <button id="get-tweet-btn" class="look-btn ml">Fetch</button>
+                    </form>
+                    <pre class="get-result" id="fetch-result"></pre>
+                </div>
+                <div class="sentiment">
+                    <h3>Find the sentiment of a tweet from its ID</h3>
+                    <form class="flex-display">
+                        <div class="form_input">
+                            <input type="text" name="tweet_id" class="tweet-id" value="">
+                        </div>
+                        <button class="look-btn ml" id="sentiment-get-btn">Fetch</button>
+                        <button class="compute-btn ml" id="compute-sentiment">Compute</button>
+                    </form>
+                    <pre class="get-result" id="fetch-sentiment-result"></pre>
+
+                </div>
+                <div class="delete">
+                    <h3>Delete an existing tweet from its ID</h3>
+                    <form class="flex-display">
+                        <div class="form_input">
+                            <input type="text" name="tweet_id" class="tweet-id" value="">
+                        </div>
+                        <button id="delete-get-btn" class="look-btn ml">Fetch</button>
+                        <button id="delete-btn" class="delete-btn ml">Delete</button>
+                    </form>
+                    <pre class="get-result" id="fetch-delete-result"></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="results panel" id="results-panel">
+        <div>
+            <h2>Previous results</h2>
+            <!-- fetch all tweets in database -->
+            <div class="overflow">
+                <table id="tweets-results" style="width:100%">
+                    <thead>
+                    <th>id</th>
+                    <th>name</th>
+                    <th>query</th>
+                    <th>sentiment</th>
+                    <th>texte</th>
+                    <th>tweetDate</th>
+                </thead>
+                </table>
+            </div>
+
+        </div>
+    </div>
+</div>
+<script src="./js/main.js"></script>
+</body>
+</html>

@@ -28,7 +28,7 @@ class TweetCreate(Schema):
     profileUser = fields.Url(example="https://twitter.com/EmmanuelMacron")
     query = fields.Url(example="https://twitter.com/EmmanuelMacron")
     sentiment = fields.Str(default="undefined", validate=validate.OneOf(["undefined", "positive", "negative", "neutral"]))
-    text = fields.String(required=True, validate=validate.Length(max=280), example="L'école permet de lutter contre les inégalités sociales et de destin. C'est pourquoi nos enfants doivent pouvoir continuer à s'y rendre et à apprendre, avec un protocole strict. Bonne rentrée à tous ! Et continuons à appliquer les gestes barrières (souvenons-nous de la chanson).")
+    text = fields.String(required=True, validate=validate.Length(max=500), example="L'école permet de lutter contre les inégalités sociales et de destin. C'est pourquoi nos enfants doivent pouvoir continuer à s'y rendre et à apprendre, avec un protocole strict. Bonne rentrée à tous ! Et continuons à appliquer les gestes barrières (souvenons-nous de la chanson).")
     timestamp = fields.DateTime(example="2021-04-26T10:12:58.694Z")
     tweetDate = fields.DateTime(format="%a %b %d %H:%M:%S %z %Y", example="Sat Apr 24 14:01:25 +0000 2021")
     tweetLink = fields.Url(example="https://twitter.com/EmmanuelMacron/status/1385257895240024070")
@@ -54,7 +54,7 @@ class TweetResponse(Schema):
     id = fields.Int(format="int64", required=True)
     name = fields.Str(example="Emmanuel Macron")
     query = fields.Url(example="https://twitter.com/EmmanuelMacron")
-    text = fields.String(required=True, validate=validate.Length(max=280),
+    text = fields.String(required=True, validate=validate.Length(max=500),
                          example="L'école permet de lutter contre les inégalités sociales et de destin. C'est pourquoi nos enfants doivent pouvoir continuer à s'y rendre et à apprendre, avec un protocole strict. Bonne rentrée à tous ! Et continuons à appliquer les gestes barrières (souvenons-nous de la chanson).")
     tweetDate = fields.DateTime(example="Mon Apr 26 05:44:19 +0000 2021")
     sentiment = fields.Str(missing="undefined", validate=validate.OneOf(["undefined", "positive", "negative", "neutral"]))

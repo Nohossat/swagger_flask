@@ -83,16 +83,16 @@ def get_tweet_from_id(id):
         return dict(res)
 
 
-def get_all_tweet(conn):
-    c = conn.cursor()
-    res = c.execute("select * from tweets;")
-    res = res.fetchall()
-    conn.commit()
+def get_all_tweet():
+    db = get_db()
+    res = db.execute("SELECT *, tweets_sentiments.sentiment FROM tweets LEFT JOIN tweets_sentiments WHERE tweets.id = tweets_sentiments.id;").fetchall()
+
+    db.commit()
 
     if res is None:
         raise ValueError("Tweet not found")
     else:
-        return res
+        return {"tweets": [dict(item) for item in res]}
 
 
 def delete_tweet_from_id(id):
@@ -105,6 +105,7 @@ def delete_tweet_from_id(id):
         raise ValueError("Tweet doesn't exist")
 
     # process deletion
+    db.execute("delete from tweets_sentiments where id = '%s'" % id)
     db.execute("delete from tweets where id = '%s';" % id)
 
     # confirm deletion
