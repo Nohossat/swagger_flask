@@ -2,6 +2,7 @@
 
 # load libaries
 from flask import Flask, jsonify
+from flask_cors import CORS
 
 # load modules
 from src.endpoints.tweet import tweet
@@ -12,6 +13,8 @@ import os
 
 # init Flask app
 app = Flask(__name__)
+CORS(app)
+
 app.config['DATABASE'] = os.path.join(os.path.dirname(__file__), "sqlite", "tweets.db")
 
 # init database

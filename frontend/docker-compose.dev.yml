@@ -1,0 +1,18 @@
+version: "3.7"
+
+services:
+  frontend: # nginx
+    image: nginx:alpine
+    restart: unless-stopped
+    container_name: swagger-frontend
+    ports:
+      - ${NGINX_HOST}:${NGINX_PORT}:80
+    expose:
+      - ${NGINX_PORT}
+    volumes:
+    - ./src:/usr/share/nginx/html
+    networks:
+      - front-net
+
+networks:
+  front-net:

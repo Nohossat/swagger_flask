@@ -4,7 +4,7 @@ from marshmallow import ValidationError, EXCLUDE, pre_load
 from src.schemas import TweetCreateList, TweetId, \
     SearchInput, ApiResponse, UpdateInput, TweetResponseList, TweetResponse
 from src.sqlite.db import insert_tweets, get_tweet_from_id, \
-    delete_tweet_from_id, get_sentiment_to_tweet_from_id
+    delete_tweet_from_id, get_sentiment_to_tweet_from_id, get_all_tweet
 
 # CONTROLLER
 
@@ -108,6 +108,62 @@ def get_tweet(id):  # noqa: E501
     try:
         schema.load({'id': id})
         response_db = get_tweet_from_id(id)
+        response = response_schema.load(response_db)
+        code = 200
+    except ValidationError as e:
+        code = 400
+        response = error_response_schema.load({
+            "code": code,
+            "type": "Validation error",
+            "msg": str(e)
+        })
+    except ValueError as e:
+        code = 404
+        response = error_response_schema.load({
+            "code": code,
+            "type": "Not found",
+            "msg": str(e)
+        })
+
+    return response, code
+
+
+@tweet.route('/tweets', methods=['GET'])
+def get_all_tweets():  # noqa: E501
+    """
+    ---
+    get:
+      description: Fetch all tweets
+
+      responses:
+        '200':
+          description: Get all tweets in database
+          content:
+            application/json:
+              schema: TweetResponse
+        '404':
+          description: Tweets not found
+          content:
+            application/json:
+              schema: ApiResponse
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema: ApiResponse
+
+      tags:
+          - tweet
+    """
+
+    error_response_schema = ApiResponse()
+    response_schema = TweetResponseList(unknown=EXCLUDE)
+    response = None
+    code = None
+
+    try:
+        response_db = get_all_tweet()
+        print(response_db, flush=True)
         response = response_schema.load(response_db)
         code = 200
     except ValidationError as e:

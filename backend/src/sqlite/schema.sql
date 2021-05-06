@@ -10,7 +10,7 @@ CREATE TABLE tweets (
   tweetDate VARCHAR(300),
   twitterId VARCHAR(100),
   handle VARCHAR(100),
-  text VARCHAR(280) NOT NULL,
+  text VARCHAR(500) NOT NULL,
   profileUser VARCHAR(100),
   name VARCHAR(50),
   tweetLink VARCHAR(300),
