@@ -163,7 +163,6 @@ def get_all_tweets():  # noqa: E501
 
     try:
         response_db = get_all_tweet()
-        print(response_db, flush=True)
         response = response_schema.load(response_db)
         code = 200
     except ValidationError as e:
