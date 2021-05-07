@@ -37,7 +37,17 @@
                     <button id="post-btn" class="post-btn">Post</button>
                 </form>
                 <div class="overflow hidden">
-                    <pre class="post-result" id="post-results"></pre>
+                    <h3 style="margin-top:2em;">New tweets saved in database</h3>
+                    <table id="post-results" style="width:100%; margin-top:1em;">
+                        <thead>
+                    <th>id</th>
+                    <th>name</th>
+                    <th>query</th>
+                    <th>sentiment</th>
+                    <th>texte</th>
+                    <th>tweetDate</th>
+                </thead>
+                    </table>
                 </div>
 
 
@@ -51,7 +61,8 @@
                         </div>
                         <button id="get-tweet-btn" class="look-btn ml">Fetch</button>
                     </form>
-                    <pre class="get-result" id="fetch-result"></pre>
+                    <table id="fetch-result" style="width:100%; margin-top:2em;">
+                    </table>
                 </div>
                 <div class="sentiment">
                     <h3>Find the sentiment of a tweet from its ID</h3>
@@ -62,7 +73,7 @@
                         <button class="look-btn ml" id="sentiment-get-btn">Fetch</button>
                         <button class="compute-btn ml" id="compute-sentiment">Compute</button>
                     </form>
-                    <pre class="get-result" id="fetch-sentiment-result"></pre>
+                     <table id="fetch-sentiment-result" style="width:100%; margin-top:2em;"></table>
 
                 </div>
                 <div class="delete">
@@ -74,7 +85,8 @@
                         <button id="delete-get-btn" class="look-btn ml">Fetch</button>
                         <button id="delete-btn" class="delete-btn ml">Delete</button>
                     </form>
-                    <pre class="get-result" id="fetch-delete-result"></pre>
+                    <table id="fetch-delete-result" style="width:100%; margin-top:2em;"></table>
+
                 </div>
             </div>
         </div>

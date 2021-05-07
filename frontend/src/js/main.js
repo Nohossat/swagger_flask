@@ -1,5 +1,4 @@
 document.getElementById("lookup-panel").classList.add("active");
-// document.getElementById("results-panel").classList.remove("active");
 
 
 document.querySelectorAll(".panel-btn").forEach(el =>
@@ -72,11 +71,20 @@ async function computeSentiment(e, displayElementId) {
 
     let response = JSON.stringify(result, null, '\t');
 
+    // change presentation to table
     document.getElementById(displayElementId).innerHTML = response;
+
+    // refresh tweets table
+    getAllTweets()
 }
 
 async function getId(e, displayElementId) {
     e.preventDefault()
+
+    let targetId = "#" + displayElementId + " tr";
+
+    document.querySelectorAll(targetId).forEach(e => e.remove());
+
     let parentForm = e.target.parentElement;
     let id = parentForm.querySelector(".tweet-id").value;
 
@@ -91,9 +99,19 @@ async function getId(e, displayElementId) {
 
     const result = await res.json();
 
-    let response = JSON.stringify(result, null, '\t');
+    let table = document.getElementById(displayElementId);
 
-    document.getElementById(displayElementId).innerHTML = response;
+    Object.entries(result).map((value, key) => {
+        let newTr = document.createElement("tr");
+        let newTd1 = document.createElement("td");
+        let newTd2 = document.createElement("td");
+
+        newTd1.append(value[0]);
+        newTd2.append(value[1]);
+        newTr.appendChild(newTd1);
+        newTr.appendChild(newTd2);
+        table.appendChild(newTr);
+    })
 }
 
 async function deleteTweet(e, displayElementId) {
@@ -118,6 +136,7 @@ async function deleteTweet(e, displayElementId) {
         response = result["msg"]
     }
 
+    // change presentation to table
     document.getElementById(displayElementId).innerHTML = response;
 
     // update big table
@@ -143,10 +162,15 @@ async function postTweets(e, displayElementId) {
 
     const result = await res.json();
 
-    let response = JSON.stringify(result, null, '\t');
+    // display table
+    let table = document.getElementById(displayElementId);
+    let parentTable = table.parentElement;
 
-    document.getElementById(displayElementId).classList.remove("hidden");
-    document.getElementById(displayElementId).innerHTML = response;
+    result["tweets"].forEach(item => {
+        table.appendChild(convertToRow(item));
+    })
+
+    parentTable.classList.remove("hidden");
 
     // update big table
     await getAllTweets()
@@ -166,7 +190,6 @@ async function getAllTweets() {
     const result = await res.json();
 
     let table = document.getElementById("tweets-results");
-
 
     result["tweets"].forEach(item => {
         table.appendChild(convertToRow(item));
