@@ -6,7 +6,8 @@ from src.schemas import TweetCreateList, TweetId, \
 from src.sqlite.db import insert_tweets, get_tweet_from_id, \
     delete_tweet_from_id, get_sentiment_to_tweet_from_id, get_all_tweet
 
-# CONTROLLER
+import requests
+import json
 
 tweet = Blueprint(name="tweet", import_name=__name__)
 
@@ -345,12 +346,34 @@ def search_tweet():  # noqa: E501
           - tweet
     """
 
-    # TODO : replace with request to sqlite
     schema = SearchInput()
     tags = request.args.getlist('tags')
+    result = "Test"
 
     try:
-        result = schema.load({'tags': tags})
+        query_string = ""
+        for idx, tag in enumerate(tags):
+            query_string += f"({tag})"
+
+            if idx != len(tags) - 1:
+                query_string += " OR "
+
+        query = json.dumps({
+            "query": {
+                "multi_match": {
+                    "query": query_string,
+                    "fields": ["text", "name"]
+                }
+            }
+        })
+
+        headers = {"Content-Type": "application/json"}
+        r = requests.get('http://elasticsearch:9200/tweets/_search?pretty=true', data=query, headers=headers)
+        result = r.json()
+        print(result["hits"]["hits"], flush=True)
+        final_results = [hit["_source"] for hit in result["hits"]["hits"]]
+        result = {"tweets": final_results}
+        print(result, flush=True)
     except ValidationError as e:
         return f"Validation errors: {e}", 400
     return result

@@ -1,10 +1,6 @@
 PRAGMA foreign_keys=ON;
 
-DROP TABLE IF EXISTS tweets;
-DROP TABLE IF EXISTS tweets_sentiments;
-DROP TABLE IF EXISTS tweets_tags;
-
-CREATE TABLE tweets (
+CREATE TABLE IF NOT EXISTS tweets (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   mediaUrl VARCHAR(300),
   tweetDate VARCHAR(300),
@@ -19,7 +15,7 @@ CREATE TABLE tweets (
   type VARCHAR(20)
 );
 
-CREATE TABLE tweets_sentiments (
+CREATE TABLE IF NOT EXISTS tweets_sentiments (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   tweet_id INTEGER UNIQUE NOT NULL,
   sentiment VARCHAR(10),
@@ -27,7 +23,7 @@ CREATE TABLE tweets_sentiments (
 );
 
 
-CREATE TABLE tweets_tags (
+CREATE TABLE IF NOT EXISTS tweets_tags (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   tweet_id INTEGER UNIQUE NOT NULL,
   tags VARCHAR(300),
