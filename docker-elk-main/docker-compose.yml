@@ -1,52 +1,19 @@
-version: "3.7"
+version: '3.2'
 
 services:
-  flask-api:
-    build:
-      context: ./backend
-      dockerfile: ${BACK_DOCKERFILE}
-      args:
-        - FLASK_ENV=${FLASK_ENV}
-        - FLASK_PORT=${FLASK_PORT}
-    restart: unless-stopped
-    container_name: flask-api
-    image: hrlab/flask-api:0.0.0
-    ports:
-      - 0.0.0.0:${FLASK_PORT}:${FLASK_PORT}
-    expose:
-      - ${FLASK_PORT}
-    volumes:
-    - ./backend/src:/app/src
-    networks:
-      - app-net
-
-  frontend:
-    image: nginx:alpine
-    restart: unless-stopped
-    container_name: swagger-frontend
-    ports:
-      - ${NGINX_HOST}:${NGINX_PORT}:80
-    expose:
-      - ${NGINX_PORT}
-    volumes:
-      - ./frontend/src:/usr/share/nginx/html
-    networks:
-      - app-net
-
   elasticsearch:
     build:
-      context: docker-elk-main/elasticsearch/
+      context: elasticsearch/
       args:
         ELK_VERSION: $ELK_VERSION
-    container_name: elasticsearch
     volumes:
       - type: bind
-        source: ./docker-elk-main/elasticsearch/config/elasticsearch.yml
+        source: ./elasticsearch/config/elasticsearch.yml
         target: /usr/share/elasticsearch/config/elasticsearch.yml
         read_only: true
       - type: volume
         source: elasticsearch
-        target: /usr/share/elasticsearch/datael
+        target: /usr/share/elasticsearch/data
     ports:
       - "9200:9200"
       - "9300:9300"
@@ -57,21 +24,20 @@ services:
       # see: https://www.elastic.co/guide/en/elasticsearch/reference/current/bootstrap-checks.html
       discovery.type: single-node
     networks:
-      - app-net
+      - elk
 
   logstash:
     build:
-      context: docker-elk-main/logstash/
+      context: logstash/
       args:
         ELK_VERSION: $ELK_VERSION
-    container_name: logstash
     volumes:
       - type: bind
-        source: ./docker-elk-main/logstash/config/logstash.yml
+        source: ./logstash/config/logstash.yml
         target: /usr/share/logstash/config/logstash.yml
         read_only: true
       - type: bind
-        source: ./docker-elk-main/logstash/pipeline
+        source: ./logstash/pipeline
         target: /usr/share/logstash/pipeline
         read_only: true
     ports:
@@ -80,30 +46,30 @@ services:
     environment:
       LS_JAVA_OPTS: "-Xmx256m -Xms256m"
     networks:
-      - app-net
+      - elk
     depends_on:
       - elasticsearch
 
   kibana:
     build:
-      context: docker-elk-main/kibana/
+      context: kibana/
       args:
         ELK_VERSION: $ELK_VERSION
-    container_name: kibana
     volumes:
       - type: bind
-        source: ./docker-elk-main/kibana/config/kibana.yml
+        source: ./kibana/config/kibana.yml
         target: /usr/share/kibana/config/kibana.yml
         read_only: true
     ports:
       - "5601:5601"
     networks:
-      - app-net
+      - elk
     depends_on:
       - elasticsearch
 
 networks:
-  app-net:
+  elk:
+    driver: bridge
 
 volumes:
   elasticsearch:

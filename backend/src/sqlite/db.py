@@ -5,6 +5,11 @@ from flask import current_app, g
 from flask.cli import with_appcontext
 from src.util import compute_sentiment
 
+import json
+import ndjson
+import requests
+import os
+
 # CREATE DB OBJECT
 def get_db():
     if 'db' not in g:
@@ -50,6 +55,7 @@ def insert_tweets(tweets):
     db = get_db()
 
     final_results = []
+    indexed_data = []
 
     for tweet in tweets:
         if len(tweet["mediaUrl"]) < 1:
@@ -64,11 +70,19 @@ def insert_tweets(tweets):
         else:
             db.execute("insert into tweets_sentiments (tweet_id, sentiment) values (?, ?)",
                        (res.lastrowid, tweet["sentiment"]))
-            final_tweet = db.execute("SELECT *, tweets_sentiments.sentiment FROM tweets LEFT JOIN tweets_sentiments ON tweets_sentiments.tweet_id = tweets.rowid WHERE tweets.rowid = '%s';" % res.lastrowid).fetchone()
-            final_results.append(dict(final_tweet))
-            print(res.lastrowid, flush=True)
+            registered_tweet = db.execute("SELECT *, tweets_sentiments.sentiment FROM tweets LEFT JOIN tweets_sentiments ON tweets_sentiments.tweet_id = tweets.rowid WHERE tweets.rowid = '%s';" % res.lastrowid).fetchone()
+            registered_tweet = dict(registered_tweet)
+            final_results.append(registered_tweet)
+
+            # get data to be indexed in elastic search
+            keys_to_extract = ["twitterId", "name", "text"]
+            indexed_data.append({key: registered_tweet[key] for key in keys_to_extract})
 
     db.commit()
+
+    # index new data
+    db.index_data(indexed_data)
+
     return final_results
 
 
@@ -86,8 +100,6 @@ def get_tweet_from_id(id):
 def get_all_tweet():
     db = get_db()
     res = db.execute("SELECT *, tweets_sentiments.sentiment FROM tweets LEFT JOIN tweets_sentiments WHERE tweets.id = tweets_sentiments.id;").fetchall()
-
-    db.commit()
 
     if res is None:
         raise ValueError("Tweet not found")
@@ -145,6 +157,58 @@ def search_tweet(tags):
     pass
 
 
+def check_if_index_exist(index="tweets"):
+    r = requests.get(f"http://elasticsearch:9200/{index}")
+    return r.status_code == 200
+
+
+def create_tweets_index(index="tweets"):
+    headers = {"Content-Type": "application/json"}
+    r = requests.put(f'http://elasticsearch:9200/{index}/', headers=headers)
+
+    if r.status_code == 200:
+        print("Index creation successful")
+    else:
+        print("Index couldn't be created")
+        print(r.json())
+
+    return None
+
+
+def get_tweets_text():
+    # get all available tweets
+    db = get_db()
+
+    tweets = db.execute("SELECT twitterId, name, text FROM tweets;").fetchall()
+
+    if tweets is None:
+        raise ValueError("Tweets not found")
+    else:
+        return [dict(item) for item in tweets]
+
+
+def index_data(tweets):
+    # create bulk request
+    filepath = os.path.join(os.path.dirname(__file__), "index_bulk.json")
+    with open(filepath, "a") as f:
+        index_field = '{ "index" : {} }'
+
+        for tweet in tweets:
+            f.write(index_field)
+            f.write('\n')
+            f.write(json.dumps(tweet))
+            f.write('\n')
+
+    with open(filepath) as f:
+        query = ndjson.load(f) # here i need to pass real ndjson
+
+    print(query)
+    headers = {"Content-Type": "application/x-ndjson"}
+    r = requests.put('http://elasticsearch:9200/tweets/_bulk', data=query, headers=headers)
+    print(r.status_code)
+    return r.status_code
+
+
 if __name__ == "__main__":
 
     tweets = [
@@ -178,8 +242,12 @@ if __name__ == "__main__":
             "query": "https://twitter.com/EmmanuelMacron",
             "type": "tweet"
         }
-
     ]
 
-    print(get_sentiment_to_tweet_from_id(1))
-
+    with open("index_bulk.json", "a") as f:
+        index_field = '{ "index" : {} }'
+        for tweet in tweets:
+            f.write(index_field)
+            f.write('\n')
+            f.write(json.dumps(tweet))
+            f.write('\n')

@@ -30,6 +30,10 @@ document.querySelector("#post-btn").addEventListener("click", async function(e) 
     await postTweets(e, "post-results")
 });
 
+document.querySelector("#search-es").addEventListener("click", async function(e) {
+    await searchTweets(e)
+});
+
 // get all tweets
 getAllTweets()
 
@@ -196,7 +200,6 @@ async function getAllTweets() {
     })
 }
 
-
 function convertToRow(elements) {
     let row = document.createElement("tr");
     let res = Object.values(elements).forEach(item => {
@@ -205,4 +208,32 @@ function convertToRow(elements) {
         row.appendChild(tdItem);
     })
     return row;
+}
+
+async function searchTweets(e) {
+    e.preventDefault()
+
+    let values = document.getElementById("search").value;
+    console.log(values);
+
+    // extract all words
+    let tags = [...values.matchAll(/[\wéèùàî]+/g)];
+    tags = tags.map(tag => 'tags=' + tag[0] + "&").join('').slice(0, -1);
+    console.log(tags);
+
+    const res = await fetch(
+        'http://localhost:5000/api/v1/tweet/search?' + tags,
+        {
+            method: 'GET'
+    })
+
+    const result = await res.json();
+    console.log(result);
+
+    let table = document.getElementById("search-results");
+
+    result["tweets"].forEach(item => {
+        table.appendChild(convertToRow(item));
+    })
+
 }

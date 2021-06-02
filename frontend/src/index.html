@@ -18,12 +18,25 @@
     <div class="lookup panel active" id="lookup-panel">
         <div class="search">
             <h3>Search</h3>
-            <form action="">
+            <form>
                 <div class="form_input">
                     <input type="text" name="search" id="search" placeholder="Look for tweets about our favorite politicians">
                 </div>
-                <button type="submit" class="look-btn ml">Look</button>
+                <button id="search-es" class="look-btn ml">Look</button>
             </form>
+            <div class="overflow">
+                    <h3 style="margin-top:2em;">Search results</h3>
+                    <table id="search-results" style="width:100%; margin-top:1em;">
+                        <thead>
+                    <th>id</th>
+                    <th>name</th>
+                    <th>query</th>
+                    <th>sentiment</th>
+                    <th>texte</th>
+                    <th>tweetDate</th>
+                </thead>
+                    </table>
+            </div>
         </div>
 
         <div class="swagger_actions">
